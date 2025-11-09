@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Portfolio Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2 class="mb-4 text-center">My Portfolio</h2>
+    <table class="table table-bordered bg-white text-center">
+      <thead class="table-dark">
+        <tr>
+          <th>Stock</th>
+          <th>Shares</th>
+          <th>Current Price ($)</th>
+        </tr>
+      </thead>
+      <tbody id="portfolio-table">
+        {% for symbol, data in portfolio.items() %}
+        <tr id="{{ symbol }}">
+          <td>{{ symbol }}</td>
+          <td>{{ data.shares }}</td>
+          <td class="price">{{ data.price }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const socket = io();
+
+    socket.on('price_update', (data) => {
+      const row = document.getElementById(data.symbol);
+      const priceCell = row.querySelector('.price');
+      priceCell.textContent = data.new_price;
+
+      // Browser notification
+      if (Notification.permission === "granted") {
+        new Notification(`${data.symbol} price changed to $${data.new_price}`);
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+
+      // Highlight change
+      row.style.backgroundColor = data.change > 0 ? "#d4edda" : "#f8d7da";
+      setTimeout(() => row.style.backgroundColor = "white", 1500);
+    });
+  </script>
+</body>
+</html>
